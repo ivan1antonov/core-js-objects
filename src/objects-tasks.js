@@ -361,35 +361,120 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
-const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
-  },
+class CssSelectorBuilder {
+  constructor() {
+    this.elementValue = '';
+    this.idValue = '';
+    this.classValues = [];
+    this.attrValues = [];
+    this.pseudoClassValues = [];
+    this.pseudoElementValue = '';
+    this.order = 0;
+  }
 
-  id(/* value */) {
-    throw new Error('Not implemented');
-  },
+  copy() {
+    const copy = new CssSelectorBuilder();
+    copy.elementValue = this.elementValue;
+    copy.idValue = this.idValue;
+    copy.classValues = [...this.classValues];
+    copy.attrValues = [...this.attrValues];
+    copy.pseudoClassValues = [...this.pseudoClassValues];
+    copy.pseudoElementValue = this.pseudoElementValue;
+    copy.order = this.order;
+    return copy;
+  }
 
-  class(/* value */) {
-    throw new Error('Not implemented');
-  },
+  checkOrder(currentOrder) {
+    if (this.order > currentOrder) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+  }
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
-  },
+  element(value) {
+    if (this.elementValue) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    const copy = this.copy();
+    copy.checkOrder(1);
+    copy.order = 1;
+    copy.elementValue = value;
+    return copy;
+  }
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
-  },
+  id(value) {
+    if (this.idValue) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    const copy = this.copy();
+    copy.checkOrder(2);
+    copy.order = 2;
+    copy.idValue = `#${value}`;
+    return copy;
+  }
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
-  },
+  class(value) {
+    const copy = this.copy();
+    copy.checkOrder(3);
+    copy.order = 3;
+    copy.classValues.push(`.${value}`);
+    return copy;
+  }
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
-  },
-};
+  attr(value) {
+    const copy = this.copy();
+    copy.checkOrder(4);
+    copy.order = 4;
+    copy.attrValues.push(`[${value}]`);
+    return copy;
+  }
+
+  pseudoClass(value) {
+    const copy = this.copy();
+    copy.checkOrder(5);
+    copy.order = 5;
+    copy.pseudoClassValues.push(`:${value}`);
+    return copy;
+  }
+
+  pseudoElement(value) {
+    if (this.pseudoElementValue) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    const copy = this.copy();
+    copy.checkOrder(6);
+    copy.order = 6;
+    copy.pseudoElementValue = `::${value}`;
+    return copy;
+  }
+
+  combine(selector1, combinator, selector2) {
+    console.log(this); // lazy change to static method))
+    const copy = new CssSelectorBuilder();
+    copy.elementValue = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return copy;
+  }
+
+  stringify() {
+    return [
+      this.elementValue,
+      this.idValue,
+      this.classValues.join(''),
+      this.attrValues.join(''),
+      this.pseudoClassValues.join(''),
+      this.pseudoElementValue,
+    ].join('');
+  }
+}
+
+const cssSelectorBuilder = new CssSelectorBuilder();
 
 module.exports = {
   shallowCopy,
