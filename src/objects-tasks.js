@@ -455,8 +455,7 @@ class CssSelectorBuilder {
     return copy;
   }
 
-  combine(selector1, combinator, selector2) {
-    console.log(this); // lazy change to static method))
+  static combine(selector1, combinator, selector2) {
     const copy = new CssSelectorBuilder();
     copy.elementValue = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
     return copy;
@@ -475,6 +474,8 @@ class CssSelectorBuilder {
 }
 
 const cssSelectorBuilder = new CssSelectorBuilder();
+
+cssSelectorBuilder.combine = CssSelectorBuilder.combine;
 
 module.exports = {
   shallowCopy,
